@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+venv/
+.venv/
+*.log
+
+# Node
+node_modules/
+dist/
+.vite/
+
+# Docker
+.docker/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Claude AI
+.claude/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Binary documents
+*.pdf
+
+# Project specific
+*.RData
+*.Rhistory
+.Rproj.user/
+inferentialspaces/files/
+inferentialspaces/output/
+inferentialspaces/data/
+
+# Temporary / diagnostic
+frontend/public/diagnose.html

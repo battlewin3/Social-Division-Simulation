@@ -1,0 +1,17 @@
+<<<<<<< HEAD
+#the R files
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+#folders
+data/
+files/
+output/
+writing/
+deprecated/
+
+#and randoms
+desktop.ini
+.dropbox

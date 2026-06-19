@@ -1,0 +1,19 @@
+services:
+  backend:
+    build: ./backend
+    container_name: abm-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=false
+      - CORS_ORIGINS=http://localhost:5173,http://localhost:3000,http://localhost
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: abm-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
