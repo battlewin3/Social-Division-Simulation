@@ -9,32 +9,11 @@ interface CardProps {
 
 export function Card({ children, className = '', title, subtitle }: CardProps) {
   return (
-    <div
-      className={`bg-surface border border-border rounded-card p-card-pad ${className}`}
-    >
+    <div className={`card ${className}`}>
       {title && (
         <div className="mb-4">
-          <h3
-            className="text-label uppercase tracking-wider m-0 mb-1"
-            style={{
-              fontFamily: 'var(--font-sans)',
-              color: 'var(--color-ink-secondary)',
-            }}
-          >
-            {title}
-          </h3>
-          {subtitle && (
-            <p
-              className="text-xs m-0"
-              style={{
-                fontSize: '0.7rem',
-                fontFamily: 'var(--font-mono)',
-                color: 'var(--color-ink-secondary)',
-              }}
-            >
-              {subtitle}
-            </p>
-          )}
+          <h3 className="card-title">{title}</h3>
+          {subtitle && <p className="card-subtitle">{subtitle}</p>}
         </div>
       )}
       {children}

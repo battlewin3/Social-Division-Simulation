@@ -19,14 +19,15 @@ export function MainLayout({ sidebar, children }: MainLayoutProps) {
     >
       {/* Sidebar */}
       <aside
-        className="thin-scrollbar fixed left-0 overflow-y-auto bg-surface"
+        className="thin-scrollbar fixed left-0 overflow-y-auto bg-surface border-r border-border"
         style={{
           top: LAYOUT.navHeight,
           width: sidebarWidth,
           height: `calc(100vh - ${LAYOUT.navHeight}px)`,
-          borderRight: collapsed ? 'none' : '1px solid var(--color-border)',
+          borderRightWidth: collapsed ? 0 : undefined,
+          borderRightStyle: collapsed ? 'none' : undefined,
           transition:
-            'width 300ms var(--ease-out-expo), border 300ms',
+            'width 300ms cubic-bezier(0.16, 1, 0.3, 1), border 300ms',
           overflow: collapsed ? 'hidden' : 'auto',
           zIndex: 'var(--z-sidebar)',
         }}
@@ -40,8 +41,8 @@ export function MainLayout({ sidebar, children }: MainLayoutProps) {
       <button
         onClick={() => setCollapsed((c) => !c)}
         title={collapsed ? '展开侧边栏' : '收起侧边栏'}
+        className="fixed flex items-center justify-center border border-border bg-surface text-ink-secondary cursor-pointer transition-colors duration-150"
         style={{
-          position: 'fixed',
           top: `calc(${LAYOUT.navHeight}px + 50vh)`,
           left: collapsed ? 8 : sidebarWidth - 14,
           transform: 'translateY(-50%)',
@@ -49,17 +50,10 @@ export function MainLayout({ sidebar, children }: MainLayoutProps) {
           width: 22,
           height: 44,
           borderRadius: '0 8px 8px 0',
-          border: '1px solid var(--color-border)',
-          backgroundColor: 'var(--color-surface)',
-          color: 'var(--color-ink-secondary)',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
           boxShadow: collapsed
             ? '0 1px 4px rgba(0,0,0,0.08)'
             : 'none',
-          transition: 'left 300ms var(--ease-out-expo), box-shadow 200ms',
+          transition: 'left 300ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 200ms',
           padding: 0,
         }}
         onMouseEnter={(e) => {
@@ -88,7 +82,7 @@ export function MainLayout({ sidebar, children }: MainLayoutProps) {
           marginLeft: sidebarWidth,
           padding: '24px',
           minHeight: `calc(100vh - ${LAYOUT.navHeight}px)`,
-          transition: 'margin-left 300ms var(--ease-out-expo)',
+          transition: 'margin-left 300ms cubic-bezier(0.16, 1, 0.3, 1)',
         }}
       >
         {children}

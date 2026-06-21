@@ -338,13 +338,9 @@ export function AgentInspector({
 
   return (
     <div
+      className="fixed bottom-0 left-0 right-0 z-[1000] flex flex-col font-sans"
       style={{
-        position: 'fixed',
-        bottom: 0,
-        left: 0,
-        right: 0,
         height: `${DRAWER_HEIGHT}px`,
-        zIndex: 1000,
         transform: isOpen ? 'translateY(0)' : 'translateY(100%)',
         transition: `transform ${TRANSITION_MS}ms cubic-bezier(0.16, 1, 0.3, 1)`,
         background: COLORS.surface,
@@ -352,47 +348,44 @@ export function AgentInspector({
         boxShadow: isOpen
           ? '0 -4px 24px rgba(0,0,0,0.08)'
           : 'none',
-        display: 'flex',
-        flexDirection: 'column',
-        fontFamily: "'Geist Sans', sans-serif",
         pointerEvents: isOpen ? 'auto' : 'none',
       }}
     >
       {/* Navigation Header */}
       <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          height: `${NAV_BAR_HEIGHT}px`,
-          padding: '0 12px',
-          borderBottom: `1px solid ${COLORS.gridLine}`,
-          flexShrink: 0,
-          gap: 12,
-        }}
+        className="flex items-center justify-between px-3 gap-3 shrink-0"
+        style={{ height: `${NAV_BAR_HEIGHT}px`, borderBottom: `1px solid ${COLORS.gridLine}` }}
       >
         {/* Left: prev / next / agent label */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <button onClick={onPrev} disabled={!isOpen || agents.length <= 1}
-            style={{ border: `1px solid ${COLORS.neutral}`, borderRadius: 3, background: COLORS.surface, color: COLORS.textPrimary, fontSize: '0.7rem', width: 24, height: 22, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: isOpen && agents.length > 1 ? 1 : 0.3 }}
-            aria-label="上一个智能体">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onPrev}
+            disabled={!isOpen || agents.length <= 1}
+            className="flex items-center justify-center w-6 h-[22px] text-[0.7rem] border border-neutral rounded-[3px] bg-surface text-text-primary cursor-pointer"
+            style={{ opacity: isOpen && agents.length > 1 ? 1 : 0.3 }}
+            aria-label="上一个智能体"
+          >
             <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M6 2L3 5L6 8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </button>
 
-          <span style={{ fontSize: '0.7rem', color: COLORS.textPrimary, fontWeight: 500, minWidth: 70, textAlign: 'center' }}>
+          <span className="text-[0.7rem] text-text-primary font-medium min-w-[70px] text-center">
             {selectedAgent ? `智能体 ${selectedAgent.agent_id}` : '未选择'}
           </span>
 
-          <button onClick={onNext} disabled={!isOpen || agents.length <= 1}
-            style={{ border: `1px solid ${COLORS.neutral}`, borderRadius: 3, background: COLORS.surface, color: COLORS.textPrimary, fontSize: '0.7rem', width: 24, height: 22, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: isOpen && agents.length > 1 ? 1 : 0.3 }}
-            aria-label="下一个智能体">
+          <button
+            onClick={onNext}
+            disabled={!isOpen || agents.length <= 1}
+            className="flex items-center justify-center w-6 h-[22px] text-[0.7rem] border border-neutral rounded-[3px] bg-surface text-text-primary cursor-pointer"
+            style={{ opacity: isOpen && agents.length > 1 ? 1 : 0.3 }}
+            aria-label="下一个智能体"
+          >
             <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M4 2L7 5L4 8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </button>
         </div>
 
         {/* Agent index indicator */}
         {selectedAgent && (
-          <span style={{ fontSize: '0.6rem', color: COLORS.textSecondary }}>
+          <span className="text-[0.6rem] text-text-secondary">
             {(() => {
               const idx = agents.findIndex((a) => a.agent_id === selectedAgent.agent_id);
               return idx >= 0 ? `${idx + 1} / ${agents.length}` : '';
@@ -401,165 +394,177 @@ export function AgentInspector({
         )}
 
         {/* Search jump */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <div className="flex items-center gap-1">
           <input
             type="text"
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
             placeholder="跳转到ID..."
+            className="input-mono"
             style={{
               width: 70,
               height: 22,
-              fontSize: '0.6rem',
-              fontFamily: "'Geist Mono', monospace",
-              border: `1px solid ${COLORS.border}`,
-              borderRadius: 3,
-              padding: '0 4px',
+              fontSize: '0.625rem',
               outline: 'none',
-              color: COLORS.textPrimary,
-              backgroundColor: COLORS.surface,
             }}
           />
-          <button onClick={handleSearch}
-            style={{ border: `1px solid ${COLORS.neutral}`, borderRadius: 3, background: COLORS.surface, color: COLORS.textPrimary, fontSize: '0.6rem', height: 22, cursor: 'pointer', padding: '0 6px' }}>
+          <button
+            onClick={handleSearch}
+            className="border border-neutral rounded-[3px] bg-surface text-text-primary text-[0.625rem] h-[22px] cursor-pointer px-1.5"
+          >
             跳转
           </button>
         </div>
 
         {/* Close */}
-        <button onClick={onClose}
-          style={{ border: `1px solid ${COLORS.neutral}`, borderRadius: 3, background: COLORS.surface, color: COLORS.textPrimary, fontSize: '0.8rem', width: 24, height: 22, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        <button
+          onClick={onClose}
+          className="flex items-center justify-center w-6 h-[22px] text-[0.8rem] border border-neutral rounded-[3px] bg-surface text-text-primary cursor-pointer"
           onMouseEnter={(e) => { e.currentTarget.style.background = COLORS.bias.bg; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = COLORS.surface; }}
-          aria-label="关闭面板">
+          aria-label="关闭面板"
+        >
           <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1 1L9 9M9 1L1 9" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>
         </button>
       </div>
 
       {/* Three-Column Body */}
-      <div style={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+      <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* Left Column: Agent Attributes */}
-        <div style={{ flex: '1 1 33.33%', borderRight: `1px solid ${COLORS.gridLine}`, padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 6, overflow: 'auto' }}>
+        <div
+          className="flex-1 basis-1/3 flex flex-col gap-1.5 p-2.5 overflow-auto"
+          style={{ borderRight: `1px solid ${COLORS.gridLine}` }}
+        >
           {selectedAgent ? (
             <>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: COLORS.textPrimary, fontFamily: "'Geist Mono', monospace" }}>ID {selectedAgent.agent_id}</span>
+              <div className="flex items-center gap-2">
+                <span className="text-[0.85rem] font-semibold text-text-primary font-mono">ID {selectedAgent.agent_id}</span>
                 <Badge variant={selectedAgent.race === 1 ? 'blue' : 'amber'}>{selectedAgent.race_label}</Badge>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 8px', background: COLORS.ability.bg, borderRadius: 4 }}>
-                <span style={{ fontSize: '0.6rem', color: COLORS.textSecondary, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{stageName('ability')}</span>
-                <span style={{ fontSize: '0.8rem', fontWeight: 600, color: COLORS.ability.text, fontFamily: "'Geist Mono', monospace" }}>{fmtNum(selectedAgent.ability)}</span>
+              <div
+                className="flex items-center gap-1.5 px-2 py-1 rounded"
+                style={{ background: COLORS.ability.bg }}
+              >
+                <span className="text-[0.625rem] text-text-secondary uppercase tracking-[0.06em]">{stageName('ability')}</span>
+                <span className="text-[0.8rem] font-semibold font-mono" style={{ color: COLORS.ability.text }}>{fmtNum(selectedAgent.ability)}</span>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginTop: 2 }}>
+              <div className="flex flex-col gap-[3px] mt-0.5">
                 {lifeStageEntries.map((entry) => (
-                  <div key={entry.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '2px 0' }}>
-                    <span style={{ fontSize: '0.63rem', color: COLORS.textSecondary }}>{entry.label}</span>
-                    <span style={{ fontSize: '0.7rem', fontWeight: 500, color: COLORS.textPrimary, fontFamily: "'Geist Mono', monospace" }}>{fmtNum(entry.value)}</span>
+                  <div key={entry.key} className="flex justify-between items-center py-0.5">
+                    <span className="text-[0.625rem] text-text-secondary">{entry.label}</span>
+                    <span className="text-[0.7rem] font-medium text-text-primary font-mono">{fmtNum(entry.value)}</span>
                   </div>
                 ))}
               </div>
               <div style={{ borderTop: `1px solid ${COLORS.gridLine}`, margin: '2px 0' }} />
-              <div style={{ fontSize: '0.6rem', color: COLORS.textSecondary, display: 'flex', justifyContent: 'space-between' }}>
+              <div className="text-[0.625rem] text-text-secondary flex justify-between">
                 <span>邻居数</span>
-                <span style={{ fontWeight: 500, color: COLORS.textPrimary }}>{selectedAgent.neighbor_count}</span>
+                <span className="font-medium text-text-primary">{selectedAgent.neighbor_count}</span>
               </div>
             </>
           ) : (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '0.7rem', color: COLORS.textSecondary }}>
+            <div className="flex items-center justify-center h-full text-[0.7rem] text-text-secondary">
               点击智能体查看详情
             </div>
           )}
         </div>
 
         {/* Middle Column: Ego-Network */}
-        <div style={{ flex: '1 1 33.33%', borderRight: `1px solid ${COLORS.gridLine}`, padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'center', overflow: 'auto' }}>
+        <div
+          className="flex-1 basis-1/3 flex flex-col gap-1.5 p-2.5 items-center overflow-auto"
+          style={{ borderRight: `1px solid ${COLORS.gridLine}` }}
+        >
           {selectedAgent ? (
             <>
-              <div style={{ display: 'flex', gap: 12, justifyContent: 'center', fontSize: '0.6rem', color: COLORS.textSecondary, fontFamily: "'Geist Mono', monospace" }}>
-                <div style={{ textAlign: 'center' }}>
-                  <span style={{ display: 'block', fontSize: '0.55rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>多数群体</span>
-                  <span style={{ fontWeight: 600, color: COLORS.majority.text, fontSize: '0.75rem' }}>{neighborDemographics.nMajority}</span>
+              <div className="flex gap-3 justify-center text-[0.625rem] text-text-secondary font-mono">
+                <div className="text-center">
+                  <span className="block text-[0.55rem] uppercase tracking-[0.05em]">多数群体</span>
+                  <span className="font-semibold text-[0.75rem]" style={{ color: COLORS.majority.text }}>{neighborDemographics.nMajority}</span>
                 </div>
-                <div style={{ textAlign: 'center' }}>
-                  <span style={{ display: 'block', fontSize: '0.55rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>少数群体</span>
-                  <span style={{ fontWeight: 600, color: COLORS.minority.text, fontSize: '0.75rem' }}>{neighborDemographics.nMinority}</span>
+                <div className="text-center">
+                  <span className="block text-[0.55rem] uppercase tracking-[0.05em]">少数群体</span>
+                  <span className="font-semibold text-[0.75rem]" style={{ color: COLORS.minority.text }}>{neighborDemographics.nMinority}</span>
                 </div>
-                <div style={{ textAlign: 'center' }}>
-                  <span style={{ display: 'block', fontSize: '0.55rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>平均收入</span>
-                  <span style={{ fontWeight: 600, color: COLORS.textPrimary, fontSize: '0.75rem' }}>{neighborDemographics.avgEarnings !== null ? fmtNum(neighborDemographics.avgEarnings, 2) : '--'}</span>
+                <div className="text-center">
+                  <span className="block text-[0.55rem] uppercase tracking-[0.05em]">平均收入</span>
+                  <span className="font-semibold text-[0.75rem] text-text-primary">{neighborDemographics.avgEarnings !== null ? fmtNum(neighborDemographics.avgEarnings, 2) : '--'}</span>
                 </div>
               </div>
-              <div style={{ fontSize: '0.6rem', color: COLORS.textSecondary }}>
+              <div className="text-[0.625rem] text-text-secondary">
                 {neighborAgents.length > 0
                   ? `${fmtPercent(neighborDemographics.nMajority / neighborAgents.length, 0)} 多数 / ${fmtPercent(neighborDemographics.nMinority / neighborAgents.length, 0)} 少数`
                   : '无邻居'}
               </div>
-              <canvas ref={canvasRef} style={{ border: `1px solid ${COLORS.gridLine}`, borderRadius: 4, flexShrink: 0 }} />
+              <canvas
+                ref={canvasRef}
+                className="shrink-0 rounded"
+                style={{ border: `1px solid ${COLORS.gridLine}` }}
+              />
             </>
           ) : (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '0.7rem', color: COLORS.textSecondary }}>
+            <div className="flex items-center justify-center h-full text-[0.7rem] text-text-secondary">
               点击智能体查看网络
             </div>
           )}
         </div>
 
         {/* Right Column: Perception vs Truth */}
-        <div style={{ flex: '1 1 33.33%', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 0, overflow: 'auto' }}>
+        <div className="flex-1 basis-1/3 flex flex-col gap-0 p-2.5 overflow-auto">
           {selectedAgent ? (
             <>
-              <div style={{ fontSize: '0.6rem', color: COLORS.textSecondary, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8, fontWeight: 500 }}>
+              <div className="text-[0.625rem] text-text-secondary uppercase tracking-[0.06em] mb-2 font-medium">
                 个体感知 vs 客观真相
               </div>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.6rem', fontFamily: "'Geist Mono', monospace" }}>
+              <table className="w-full border-collapse text-[0.625rem] font-mono">
                 <thead>
                   <tr style={{ borderBottom: `1px solid ${COLORS.gridLine}` }}>
-                    <th style={{ textAlign: 'left', fontWeight: 500, color: COLORS.textSecondary, padding: '2px 2px 4px 0', whiteSpace: 'nowrap' }}>指标</th>
-                    <th style={{ textAlign: 'right', fontWeight: 500, color: COLORS.textSecondary, padding: '2px 2px 4px 2px', whiteSpace: 'nowrap' }}>感知</th>
-                    <th style={{ textAlign: 'right', fontWeight: 500, color: COLORS.textSecondary, padding: '2px 2px 4px 2px', whiteSpace: 'nowrap' }}>真相</th>
-                    <th style={{ textAlign: 'center', fontWeight: 500, color: COLORS.textSecondary, padding: '2px 0 4px 2px', width: 20 }}></th>
+                    <th className="text-left font-medium text-text-secondary py-[2px] pr-0.5 whitespace-nowrap">指标</th>
+                    <th className="text-right font-medium text-text-secondary py-[2px] px-0.5 whitespace-nowrap">感知</th>
+                    <th className="text-right font-medium text-text-secondary py-[2px] px-0.5 whitespace-nowrap">真相</th>
+                    <th className="text-center font-medium text-text-secondary py-[2px] pl-0.5 w-5"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {/* Gini */}
                   <tr>
-                    <td style={{ padding: '4px 2px 4px 0', color: COLORS.textSecondary, whiteSpace: 'nowrap' }}>基尼系数</td>
-                    <td style={{ textAlign: 'right', padding: '4px 2px', color: COLORS.textPrimary, fontWeight: 500 }}>
+                    <td className="py-1 pr-0.5 text-text-secondary whitespace-nowrap">基尼系数</td>
+                    <td className="text-right py-1 px-0.5 text-text-primary font-medium">
                       {selectedAgent.perceived_gini != null ? fmtNum(selectedAgent.perceived_gini) : '--'}
                     </td>
-                    <td style={{ textAlign: 'right', padding: '4px 2px', color: COLORS.textPrimary, fontWeight: 500 }}>
+                    <td className="text-right py-1 px-0.5 text-text-primary font-medium">
                       {godsEye ? fmtNum(godsEye.gini) : '--'}
                     </td>
-                    <td style={{ textAlign: 'center', padding: '4px 0 4px 2px', color: biasColor(selectedAgent.perceived_gini ?? null, godsEye?.gini ?? null), fontSize: '0.75rem' }}>
+                    <td className="text-center py-1 pl-0.5 text-[0.75rem]" style={{ color: biasColor(selectedAgent.perceived_gini ?? null, godsEye?.gini ?? null) }}>
                       {biasArrow(selectedAgent.perceived_gini ?? null, godsEye?.gini ?? null)}
                     </td>
                   </tr>
                   {/* Race Gap */}
                   <tr>
-                    <td style={{ padding: '4px 2px 4px 0', color: COLORS.textSecondary, whiteSpace: 'nowrap' }}>种族差距</td>
-                    <td style={{ textAlign: 'right', padding: '4px 2px', color: COLORS.textPrimary, fontWeight: 500 }}>
+                    <td className="py-1 pr-0.5 text-text-secondary whitespace-nowrap">种族差距</td>
+                    <td className="text-right py-1 px-0.5 text-text-primary font-medium">
                       {selectedAgent.perceived_race_gap != null ? fmtNum(selectedAgent.perceived_race_gap) : '--'}
                     </td>
-                    <td style={{ textAlign: 'right', padding: '4px 2px', color: COLORS.textPrimary, fontWeight: 500 }}>
+                    <td className="text-right py-1 px-0.5 text-text-primary font-medium">
                       {godsEye ? fmtNum(godsEye.race_gap) : '--'}
                     </td>
-                    <td style={{ textAlign: 'center', padding: '4px 0 4px 2px', color: biasColor(selectedAgent.perceived_race_gap ?? null, godsEye?.race_gap ?? null), fontSize: '0.75rem' }}>
+                    <td className="text-center py-1 pl-0.5 text-[0.75rem]" style={{ color: biasColor(selectedAgent.perceived_race_gap ?? null, godsEye?.race_gap ?? null) }}>
                       {biasArrow(selectedAgent.perceived_race_gap ?? null, godsEye?.race_gap ?? null)}
                     </td>
                   </tr>
                   {/* Ability Beta */}
                   <tr>
-                    <td style={{ padding: '4px 2px 4px 0', color: COLORS.textSecondary, whiteSpace: 'nowrap' }}>能力系数</td>
-                    <td style={{ textAlign: 'right', padding: '4px 2px', color: COLORS.textPrimary, fontWeight: 500 }}>
+                    <td className="py-1 pr-0.5 text-text-secondary whitespace-nowrap">能力系数</td>
+                    <td className="text-right py-1 px-0.5 text-text-primary font-medium">
                       {selectedAgent.perceived_betas && selectedAgent.perceived_betas.length >= 2 ? fmtSigned(selectedAgent.perceived_betas[1]) : '--'}
                     </td>
-                    <td style={{ textAlign: 'right', padding: '4px 2px', color: COLORS.textPrimary, fontWeight: 500 }}>
+                    <td className="text-right py-1 px-0.5 text-text-primary font-medium">
                       {godsEye?.ols_full.beta_ability != null ? fmtSigned(godsEye.ols_full.beta_ability) : '--'}
                     </td>
-                    <td style={{ textAlign: 'center', padding: '4px 0 4px 2px', color: biasColor(
+                    <td className="text-center py-1 pl-0.5 text-[0.75rem]" style={{ color: biasColor(
                       (selectedAgent.perceived_betas && selectedAgent.perceived_betas.length >= 2 ? selectedAgent.perceived_betas[1] : null),
                       godsEye?.ols_full.beta_ability ?? null
-                    ), fontSize: '0.75rem' }}>
+                    ) }}>
                       {biasArrow(
                         selectedAgent.perceived_betas && selectedAgent.perceived_betas.length >= 2 ? selectedAgent.perceived_betas[1] : null,
                         godsEye?.ols_full.beta_ability ?? null
@@ -569,13 +574,16 @@ export function AgentInspector({
                 </tbody>
               </table>
               {selectedAgent.perceived_r_squared != null && (
-                <div style={{ marginTop: 'auto', fontSize: '0.55rem', color: COLORS.textSecondary, padding: '4px 0 0 0', borderTop: `1px solid ${COLORS.gridLine}` }}>
+                <div
+                  className="mt-auto text-[0.55rem] text-text-secondary pt-1"
+                  style={{ borderTop: `1px solid ${COLORS.gridLine}` }}
+                >
                   感知 R&sup2; = {fmtNum(selectedAgent.perceived_r_squared, 4)} | 真相 R&sup2; = {godsEye ? fmtNum(godsEye.ols_full.r_squared, 4) : '--'}
                 </div>
               )}
             </>
           ) : (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '0.7rem', color: COLORS.textSecondary }}>
+            <div className="flex items-center justify-center h-full text-[0.7rem] text-text-secondary">
               点击智能体查看感知对比
             </div>
           )}

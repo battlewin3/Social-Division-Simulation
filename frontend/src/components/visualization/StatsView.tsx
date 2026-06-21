@@ -213,7 +213,7 @@ function renderChart(
     .selectAll('.tick text')
     .attr('fill', TEXT_SECONDARY)
     .style('font-family', "'Geist Sans', sans-serif")
-    .style('font-size', '0.6rem');
+    .style('font-size', '0.625rem');
   axisG.select('.domain').attr('stroke', GRID_LINE).attr('stroke-width', 0.5);
 
   // --- zero line ---
@@ -285,7 +285,7 @@ function renderChart(
       .duration(TRANSITION_MS)
       .attr('width', pW);
 
-    // error bars (using bias as ± extent)
+    // error bars (using bias as +/- extent)
     if (datum.bias !== null && datum.bias !== undefined && datum.bias !== 0) {
       const biasAbs = Math.abs(datum.bias);
       const errLo = xScale(pVal - biasAbs);
@@ -339,21 +339,15 @@ function renderChart(
   }
 
   // --- row labels ("Truth" / "Perceived") on the left ---
-  const labelStyle = {
-    'font-family': "'Geist Sans', sans-serif",
-    'font-size': '0.6rem',
-    fill: TEXT_SECONDARY,
-  };
-
   sel
     .append('text')
     .attr('x', LEFT_PAD - 5)
     .attr('y', truthY + BAR_HEIGHT / 2)
     .attr('text-anchor', 'end')
     .attr('dominant-baseline', 'central')
-    .style('font-family', labelStyle['font-family'])
-    .style('font-size', labelStyle['font-size'])
-    .attr('fill', labelStyle.fill)
+    .style('font-family', "'Geist Sans', sans-serif")
+    .style('font-size', '0.625rem')
+    .attr('fill', TEXT_SECONDARY)
     .text('真相');
 
   sel
@@ -362,9 +356,9 @@ function renderChart(
     .attr('y', percY + BAR_HEIGHT / 2)
     .attr('text-anchor', 'end')
     .attr('dominant-baseline', 'central')
-    .style('font-family', labelStyle['font-family'])
-    .style('font-size', labelStyle['font-size'])
-    .attr('fill', labelStyle.fill)
+    .style('font-family', "'Geist Sans', sans-serif")
+    .style('font-size', '0.625rem')
+    .attr('fill', TEXT_SECONDARY)
     .text('感知');
 }
 
@@ -450,11 +444,7 @@ export function StatsView({ godsEye, perception, loading, error }: StatsViewProp
       {/* Loading skeleton */}
       {loading && (
         <div
-          className="grid gap-3"
-          style={{
-            gridTemplateColumns: '1fr 1fr',
-            gridTemplateRows: '1fr 1fr',
-          }}
+          className="grid gap-3 grid-cols-2 grid-rows-2"
         >
           {[0, 1, 2, 3].map((i) => (
             <div
@@ -469,11 +459,11 @@ export function StatsView({ godsEye, perception, loading, error }: StatsViewProp
       {/* Error state */}
       {!loading && error && (
         <div
-          className="flex flex-col items-center justify-center gap-2"
-          style={{ height: 160, fontFamily: 'var(--font-sans)' }}
+          className="flex flex-col items-center justify-center gap-2 font-sans"
+          style={{ height: 160 }}
         >
-          <span style={{ fontSize: '0.8rem', color: 'var(--color-error-text)' }}>{error}</span>
-          <span style={{ fontSize: '0.65rem', color: 'var(--color-ink-secondary)' }}>
+          <span className="text-[0.8rem]" style={{ color: 'var(--color-error-text)' }}>{error}</span>
+          <span className="text-[0.65rem] text-ink-secondary">
             请检查后端状态后重试
           </span>
         </div>
@@ -482,45 +472,36 @@ export function StatsView({ godsEye, perception, loading, error }: StatsViewProp
       {/* Empty state */}
       {!loading && !error && !hasData && (
         <div
-          className="flex items-center justify-center text-text-secondary"
-          style={{ height: 160, fontFamily: "'Geist Sans', sans-serif", fontSize: '0.8rem' }}
+          className="flex items-center justify-center text-text-secondary font-sans text-[0.8rem]"
+          style={{ height: 160 }}
         >
           运行模拟以查看统计对比。
         </div>
       )}
 
-      {/* Charts grid — always render the measure container so ResizeObserver can bind */}
+      {/* Charts grid -- always render the measure container so ResizeObserver can bind */}
       <div ref={containerRef}>
         {!loading && !error && hasData && (
           <>
-            <div
-              className="grid gap-3"
-              style={{
-                gridTemplateColumns: '1fr 1fr',
-                gridTemplateRows: '1fr 1fr',
-              }}
-            >
+            <div className="grid gap-3 grid-cols-2 grid-rows-2">
             {chartData.map((datum, i) => (
               <div
                 key={datum.metricKey}
-                className="bg-surface border border-border rounded-card overflow-hidden"
-                style={{ padding: '4px 6px 2px 6px' }}
+                className="bg-surface border border-border rounded-card overflow-hidden p-[4px_6px_2px_6px]"
               >
                 {/* Metric title */}
                 <div
-                  className="text-label uppercase tracking-wider mb-0.5"
-                  style={{
-                    fontFamily: "'Geist Sans', sans-serif",
-                    fontSize: '0.6rem',
-                    color: TEXT_SECONDARY,
-                    paddingLeft: LEFT_PAD,
-                  }}
+                  className="text-label uppercase tracking-wider mb-0.5 font-sans text-[0.625rem]"
+                  style={{ color: TEXT_SECONDARY, paddingLeft: LEFT_PAD }}
                 >
                   {datum.label}
                 </div>
 
                 <svg ref={svgRefs[i]} />
-                <div style={{ fontFamily: "'Geist Sans', sans-serif", fontSize: '0.55rem', color: TEXT_SECONDARY, paddingLeft: LEFT_PAD, paddingTop: 2, lineHeight: 1.3 }}>
+                <div
+                  className="font-sans text-[0.625rem] pt-0.5 leading-relaxed"
+                  style={{ color: TEXT_SECONDARY, paddingLeft: LEFT_PAD }}
+                >
                   {METRIC_DESCRIPTIONS[datum.metricKey] || ''}
                 </div>
               </div>
@@ -529,14 +510,7 @@ export function StatsView({ godsEye, perception, loading, error }: StatsViewProp
 
           {/* Summary footnote */}
           {perception && (
-            <p
-              className="mt-3 mb-0"
-              style={{
-                fontFamily: "'Geist Sans', sans-serif",
-                fontSize: '0.65rem',
-                color: TEXT_SECONDARY,
-              }}
-            >
+            <p className="mt-3 mb-0 font-sans text-[0.65rem]" style={{ color: TEXT_SECONDARY }}>
               基于 {perception.n_agents_with_inference} 个具有推断数据的智能体。
               {godsEye && (
                 <>

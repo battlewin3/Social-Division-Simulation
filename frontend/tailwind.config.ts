@@ -47,9 +47,9 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ['"Geist Sans"', '"SF Pro Display"', '"Helvetica Neue"', '"Switzer"', 'sans-serif'],
-        serif: ['"Newsreader"', '"Lyon Text"', 'serif'],
-        mono: ['"Geist Mono"', '"SF Mono"', '"JetBrains Mono"', 'monospace'],
+        sans: 'var(--font-sans)',
+        serif: 'var(--font-serif)',
+        mono: 'var(--font-mono)',
       },
       fontSize: {
         hero: ['2rem', { lineHeight: '1.1', letterSpacing: '-0.03em', fontWeight: '400' }],
@@ -64,10 +64,14 @@ const config: Config = {
       },
       boxShadow: {
         'card-hover': '0 2px 8px rgba(0, 0, 0, 0.04)',
+        'surface': '0 1px 3px rgba(0, 0, 0, 0.06)',
+        'drawer': '0 -4px 24px rgba(0, 0, 0, 0.08)',
       },
       spacing: {
         section: '3rem',
         'card-pad': '1.5rem',
+        nav: 'var(--nav-height)',
+        sidebar: 'var(--sidebar-width)',
       },
     },
   },

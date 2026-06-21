@@ -189,10 +189,10 @@ export function SensitivityView({
       .append('g')
       .attr('transform', `translate(${MARGIN.left},${MARGIN.top})`);
 
-    // ── Build per-stage data ──
+    // --- Build per-stage data ---
     const stageDataMap = buildSeriesData(sweepResult, metric.accessor);
 
-    // ── Compute combined extent across all stages ──
+    // --- Compute combined extent across all stages ---
     const allParamVals: number[] = [];
     const allMetricVals: number[] = [];
     for (const [, pts] of stageDataMap) {
@@ -231,7 +231,7 @@ export function SensitivityView({
       .range([innerH, 0])
       .nice();
 
-    // ── Grid lines (horizontal) ──
+    // --- Grid lines (horizontal) ---
     const yTicks = yScale.ticks(7);
     g.selectAll('.grid-h')
       .data(yTicks)
@@ -245,7 +245,7 @@ export function SensitivityView({
       .attr('stroke', GRID_LINE)
       .attr('stroke-width', 0.5);
 
-    // ── X axis ──
+    // --- X axis ---
     const xAxis = d3
       .axisBottom(xScale)
       .ticks(7)
@@ -278,7 +278,7 @@ export function SensitivityView({
       .style('font-size', '0.65rem')
       .text(sweepResult.sweep_param_label);
 
-    // ── Y axis ──
+    // --- Y axis ---
     const yAxis = d3.axisLeft(yScale).ticks(7).tickSize(5).tickFormat(d3.format('.3f'));
     const yAxisG = g.append('g').attr('class', 'y-axis').call(yAxis);
 
@@ -293,7 +293,7 @@ export function SensitivityView({
       .style('font-family', "'Geist Sans', sans-serif")
       .style('font-size', '0.65rem');
 
-    // ── Y-axis label ──
+    // --- Y-axis label ---
     g.append('text')
       .attr('x', -innerH / 2)
       .attr('y', -40)
@@ -305,18 +305,18 @@ export function SensitivityView({
       .style('letter-spacing', '0.03em')
       .text(metric.label);
 
-    // ── Line generator ──
+    // --- Line generator ---
     const lineGen = d3
       .line<{ param_value: number; value: number }>()
       .x((d) => xScale(d.param_value))
       .y((d) => yScale(d.value))
       .curve(d3.curveMonotoneX);
 
-    // ── Draw one line + dots per stage ──
+    // --- Draw one line + dots per stage ---
     for (const [stage, pts] of stageDataMap) {
       const color = STAGE_COLORS[stage];
 
-      // Line path — animated from zero length
+      // Line path -- animated from zero length
       const path = g
         .append('path')
         .datum(pts)
@@ -338,7 +338,7 @@ export function SensitivityView({
           .attr('stroke-dashoffset', 0);
       }
 
-      // ── Data point dots ──
+      // --- Data point dots ---
       const dotG = g
         .selectAll(`.dot-${stage}`)
         .data(pts)
@@ -371,7 +371,7 @@ export function SensitivityView({
         .duration(TRANSITION_MS * 0.4)
         .attr('opacity', 1);
 
-      // ── Interaction: hover + click ──
+      // --- Interaction: hover + click ---
       dotG
         .on('mouseenter', function (event, d) {
           d3.select(this)
@@ -412,7 +412,7 @@ export function SensitivityView({
         });
     }
 
-    // ── Inline legend (top-right of chart area) ──
+    // --- Inline legend (top-right of chart area) ---
     const stagesInOrder: NetworkStage[] = ['random', 'nhood', 'school', 'earnings'];
     const legendG = svg
       .append('g')
@@ -477,23 +477,30 @@ export function SensitivityView({
           : '运行参数扫描以查看结果敏感性'
       }
     >
-      {/* ── Sweep trigger ── */}
+      {/* Sweep trigger */}
       {onRunSweep && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-          <span style={{ fontSize: '0.7rem', fontFamily: "'Geist Sans', sans-serif", color: 'var(--color-ink-secondary)' }}>扫描参数:</span>
-          <select value={selectedSweepParam} onChange={(e) => setSelectedSweepParam(e.target.value)}
-            style={{ fontSize: '0.7rem', fontFamily: "'Geist Mono', monospace", padding: '4px 8px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--color-surface)', color: 'var(--color-ink)', cursor: 'pointer' }}>
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-[0.7rem] font-sans text-ink-secondary">扫描参数:</span>
+          <select
+            value={selectedSweepParam}
+            onChange={(e) => setSelectedSweepParam(e.target.value)}
+            className="text-[0.7rem] font-mono px-2 py-1 border border-border rounded-btn bg-surface text-text-primary cursor-pointer"
+          >
             {availableParams.map((p) => <option key={p} value={p}>{p}</option>)}
           </select>
-          <button onClick={() => onRunSweep(selectedSweepParam)} disabled={sweepRunning}
-            style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '5px 12px', fontSize: '0.7rem', fontFamily: 'var(--font-sans)', backgroundColor: 'var(--color-accent)', color: '#FFF', border: 'none', borderRadius: 'var(--radius-sm)', cursor: sweepRunning ? 'not-allowed' : 'pointer', opacity: sweepRunning ? 0.6 : 1 }}>
+          <button
+            onClick={() => onRunSweep(selectedSweepParam)}
+            disabled={sweepRunning}
+            className="btn-accent flex items-center gap-1 px-3 py-1.5 text-[0.7rem] font-sans text-white border-none rounded-btn cursor-pointer"
+            style={{ opacity: sweepRunning ? 0.6 : 1, cursor: sweepRunning ? 'not-allowed' : 'pointer' }}
+          >
             {sweepRunning ? '扫描中...' : '▶ 运行参数扫描'}
           </button>
         </div>
       )}
 
-      {/* ── Metric selector tabs ── */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 16 }}>
+      {/* Metric selector tabs */}
+      <div className="flex gap-1 mb-4">
         {METRICS.map((m) => {
           const active = selectedMetricKey === m.key;
           return (
@@ -501,18 +508,12 @@ export function SensitivityView({
               key={m.key}
               type="button"
               onClick={() => setSelectedMetricKey(m.key)}
+              className="font-sans text-[0.7rem] px-3.5 py-1.5 rounded-md border cursor-pointer transition-all duration-150 leading-relaxed"
               style={{
-                padding: '5px 14px',
-                fontSize: '0.7rem',
-                fontFamily: "'Geist Sans', sans-serif",
                 fontWeight: active ? 600 : 400,
                 color: active ? '#1A1A1A' : TEXT_SECONDARY,
                 background: active ? COLORS.majority.bg : 'transparent',
-                border: `1px solid ${active ? COLORS.majority.stroke : COLORS.border}`,
-                borderRadius: 6,
-                cursor: 'pointer',
-                transition: 'all 150ms ease',
-                lineHeight: 1.4,
+                borderColor: active ? COLORS.majority.stroke : COLORS.border,
               }}
             >
               {m.label}
@@ -521,7 +522,7 @@ export function SensitivityView({
         })}
       </div>
 
-      {/* ── Legend ── */}
+      {/* Legend */}
       <Legend
         items={[
           { color: STAGE_COLORS.random, label: '随机网络', shape: 'line' },
@@ -532,7 +533,7 @@ export function SensitivityView({
         className="mb-4"
       />
 
-      {/* ── Loading skeleton ── */}
+      {/* Loading skeleton */}
       {loading && (
         <div
           className="skeleton-shimmer"
@@ -540,88 +541,52 @@ export function SensitivityView({
         />
       )}
 
-      {/* ── Error state ── */}
+      {/* Error state */}
       {!loading && error && (
-        <div
-          style={{
-            height: 200,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 8,
-            fontFamily: 'var(--font-sans)',
-          }}
-        >
-          <span style={{ fontSize: '0.8rem', color: 'var(--color-error-text)' }}>{error}</span>
-          <span style={{ fontSize: '0.65rem', color: 'var(--color-ink-secondary)' }}>
+        <div className="flex flex-col items-center justify-center gap-2 font-sans" style={{ height: 200 }}>
+          <span className="text-[0.8rem]" style={{ color: 'var(--color-error-text)' }}>{error}</span>
+          <span className="text-[0.65rem] text-ink-secondary">
             请检查后端状态后重试
           </span>
         </div>
       )}
 
-      {/* ── Empty state ── */}
+      {/* Empty state */}
       {!loading && !error && !hasData && (
-        <div
-          style={{
-            height: 200,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontFamily: "'Geist Sans', sans-serif",
-            fontSize: '0.8rem',
-            color: TEXT_SECONDARY,
-          }}
-        >
+        <div className="flex items-center justify-center font-sans text-[0.8rem] text-text-secondary" style={{ height: 200 }}>
           运行参数扫描以查看敏感性分析。
         </div>
       )}
 
-      {/* ── Chart ── */}
+      {/* Chart */}
       {!loading && !error && hasData && (
-        <div ref={containerRef} style={{ position: 'relative' }}>
-          <svg ref={svgRef} style={{ display: 'block' }} />
+        <div ref={containerRef} className="relative">
+          <svg ref={svgRef} className="block" />
 
           {/* Hover tooltip */}
           {tooltip.datum && (
             <div
+              className="absolute bg-white border border-border rounded-lg px-3 py-2 text-[0.7rem] font-sans text-[#1A1A1A] shadow-[0_2px_12px_rgba(0,0,0,0.08)] pointer-events-none z-30 whitespace-nowrap leading-relaxed"
               style={{
-                position: 'absolute',
                 left: Math.min(tooltip.x + 14, containerWidth - 190),
                 top: Math.max(tooltip.y - 60, 0),
-                background: '#FFFFFF',
-                border: `1px solid ${COLORS.border}`,
-                borderRadius: 8,
-                padding: '8px 12px',
-                fontSize: '0.7rem',
-                fontFamily: "'Geist Sans', sans-serif",
-                color: '#1A1A1A',
-                boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
-                pointerEvents: 'none',
-                zIndex: 30,
-                whiteSpace: 'nowrap',
-                lineHeight: 1.5,
               }}
             >
               <div
-                style={{
-                  fontWeight: 600,
-                  marginBottom: 3,
-                  color: STAGE_COLORS[tooltip.datum.stage],
-                  fontSize: '0.75rem',
-                }}
+                className="font-semibold mb-[3px] text-[0.75rem]"
+                style={{ color: STAGE_COLORS[tooltip.datum.stage] }}
               >
                 {tooltip.datum.stageLabel}
               </div>
-              <div style={{ color: TEXT_SECONDARY }}>
+              <div className="text-text-secondary">
                 {sweepResult.sweep_param_label}:{' '}
-                <span style={{ color: '#1A1A1A', fontWeight: 500 }}>
+                <span className="text-[#1A1A1A] font-medium">
                   {tooltip.datum.paramValue.toFixed(3)}
                 </span>
               </div>
-              <div style={{ color: TEXT_SECONDARY }}>
+              <div className="text-text-secondary">
                 {metric.label}:{' '}
-                <span style={{ color: '#1A1A1A', fontWeight: 500 }}>
+                <span className="text-[#1A1A1A] font-medium">
                   {metric.format(tooltip.datum.metricValue)}
                 </span>
               </div>
@@ -630,17 +595,9 @@ export function SensitivityView({
         </div>
       )}
 
-      {/* ── Summary footnote ── */}
+      {/* Summary footnote */}
       {!loading && !error && sweepResult && sweepResult.summary.max_gini_bias_stage && (
-        <p
-          style={{
-            marginTop: 12,
-            marginBottom: 0,
-            fontFamily: "'Geist Sans', sans-serif",
-            fontSize: '0.65rem',
-            color: TEXT_SECONDARY,
-          }}
-        >
+        <p className="mt-3 mb-0 font-sans text-[0.65rem] text-text-secondary">
           最大基尼偏差出现在 {sweepResult.summary.max_gini_bias_stage} 阶段
           {sweepResult.summary.max_gini_bias !== null &&
             ` (${sweepResult.summary.max_gini_bias.toFixed(4)})`}
