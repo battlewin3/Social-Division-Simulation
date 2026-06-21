@@ -42,37 +42,20 @@ export function Slider({
       onMouseEnter={() => onHover?.(true)}
       onMouseLeave={() => onHover?.(false)}>
       <div className="flex justify-between items-baseline">
-        <label
-          className="text-xs text-text-secondary"
-          style={{
-            fontFamily: "'Geist Sans', sans-serif",
-            fontSize: '0.675rem',
-            letterSpacing: '0.03em',
-          }}
-        >
+        <label className="font-sans text-[0.675rem] tracking-[0.03em] text-text-secondary">
           {label}
         </label>
-        <span
-          className="text-xs font-medium text-text-primary tabular-nums"
-          style={{ fontFamily: "'Geist Mono', monospace", fontSize: '0.675rem' }}
-        >
+        <span className="font-mono text-[0.675rem] font-medium text-text-primary tabular-nums">
           {displayValue}
         </span>
       </div>
       <div className="relative w-full h-6 flex items-center">
         {/* Track background */}
-        <div
-          className="absolute w-full rounded-full"
-          style={{
-            height: 4,
-            backgroundColor: 'var(--color-border)',
-          }}
-        />
+        <div className="absolute w-full h-1 rounded-full bg-border" />
         {/* Track filled */}
         <div
-          className="absolute rounded-full"
+          className="absolute h-1 rounded-full"
           style={{
-            height: 4,
             width: `${progress}%`,
             backgroundColor: disabled ? 'var(--color-border)' : accentColor,
             transition: 'width 100ms ease-out',
@@ -88,18 +71,15 @@ export function Slider({
           value={value}
           onChange={handleChange}
           disabled={disabled}
-          className="absolute w-full h-full opacity-0 cursor-pointer"
-          style={{ zIndex: 1 }}
+          className="absolute w-full h-full opacity-0 cursor-pointer z-[1]"
         />
         {/* Custom thumb */}
         <div
-          className="absolute w-4 h-4 rounded-full bg-surface border transition-shadow duration-200"
+          className="absolute w-4 h-4 rounded-full bg-surface border-2 border-solid shadow-surface pointer-events-none"
           style={{
             left: `calc(${progress}% - 8px)`,
-            border: '2px solid ' + (disabled ? 'var(--color-border)' : accentColor),
-            boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+            borderColor: disabled ? 'var(--color-border)' : accentColor,
             transition: 'left 100ms ease-out',
-            pointerEvents: 'none',
           }}
         />
       </div>

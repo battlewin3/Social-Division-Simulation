@@ -9,92 +9,9 @@ import * as d3 from 'd3';
 import type { NetworkData, NetworkNode } from '../../types/simulation';
 import { COLORS } from '../../lib/constants';
 import { Card } from '../shared/Card';
-import { CaretLeft, GearSix, CaretDown, CaretRight } from '@phosphor-icons/react';
-
-// ============================================================
-// Types
-// ============================================================
-
-interface HierarchicalNetworkViewProps {
-  network: NetworkData | null;
-  selectedAgentId: number | null;
-  onSelectAgent: (id: number) => void;
-  loading: boolean;
-  error: string | null;
-}
-
-interface SimNode extends d3.SimulationNodeDatum {
-  id: number;
-  race: number;
-  earnings: number;
-  radius: number;
-}
-
-interface CommunityNode extends d3.SimulationNodeDatum {
-  id: string;
-  groupKey: number;
-  label: string;
-  memberCount: number;
-  majorityCount: number;
-  minorityCount: number;
-  radius: number;
-}
-
-interface CommunityEdge {
-  source: string;
-  target: string;
-  weight: number;
-}
-
-// ============================================================
-// Force simulation tunable parameters
-// ============================================================
-
-interface ForceParams {
-  chargeStrength: number;
-  linkDistance: number;
-  linkStrength: number;
-  collisionPadding: number;
-  centerStrength: number;
-  alphaDecay: number;
-}
-
-const FORCE_DEFAULTS: Record<'community' | 'interior', ForceParams> = {
-  community: {
-    chargeStrength: -350,
-    linkDistance: 120,
-    linkStrength: 0.5,
-    collisionPadding: 10,
-    centerStrength: 1.0,
-    alphaDecay: 0.0228,
-  },
-  interior: {
-    chargeStrength: -90,
-    linkDistance: 28,
-    linkStrength: 0.25,
-    collisionPadding: 6,
-    centerStrength: 1.0,
-    alphaDecay: 0.0228,
-  },
-};
-
-const FORCE_LABELS: Record<keyof ForceParams, string> = {
-  chargeStrength: '电荷斥力',
-  linkDistance: '连线距离',
-  linkStrength: '连线强度',
-  collisionPadding: '碰撞边距',
-  centerStrength: '中心引力',
-  alphaDecay: '衰减速度',
-};
-
-const FORCE_RANGES: Record<keyof ForceParams, [number, number, number]> = {
-  chargeStrength: [-1200, 0, 10],
-  linkDistance: [5, 300, 1],
-  linkStrength: [0, 1, 0.01],
-  collisionPadding: [0, 40, 1],
-  centerStrength: [0, 3, 0.05],
-  alphaDecay: [0.002, 0.2, 0.001],
-};
+import { CaretLeft, GearSix } from '@phosphor-icons/react';
+import type { SimNode, CommunityNode, CommunityEdge, ForceParams, HierarchicalNetworkViewProps } from './NetworkCanvas/types';
+import { FORCE_DEFAULTS, FORCE_LABELS, FORCE_RANGES } from './NetworkCanvas/types';
 
 // ============================================================
 // Helpers
@@ -202,7 +119,7 @@ export function HierarchicalNetworkView({
     setSelectedCommunity(null);
   }, [network]);
 
-  // Reset force params when switching community ↔ interior
+  // Reset force params when switching community <-> interior
   useEffect(() => {
     const defaults = selectedCommunity === null
       ? FORCE_DEFAULTS.community
@@ -638,6 +555,36 @@ export function HierarchicalNetworkView({
     d3.select(svg).transition().duration(400).call(zoom.transform, d3.zoomIdentity);
   };
 
+  // ---- Force controls handlers ----
+  const handleResetForce = useCallback(() => {
+    const defaults = selectedCommunity === null
+      ? FORCE_DEFAULTS.community
+      : FORCE_DEFAULTS.interior;
+    setForceParams(defaults);
+    // Reheat the sim with defaults
+    const sim = simRef.current;
+    if (sim) {
+      const cx = sizeRef.current.w / 2;
+      const cy = sizeRef.current.h / 2;
+      sim.force('charge', d3.forceManyBody().strength(defaults.chargeStrength));
+      sim.force('center', d3.forceCenter(cx, cy).strength(defaults.centerStrength));
+      sim.alphaDecay(defaults.alphaDecay);
+      // Update collision
+      const nodes = nodeDataRef.current;
+      if (nodes.length > 0) {
+        const baseR = (d: any) => d.radius || 5;
+        sim.force('collision', d3.forceCollide<any>().radius((d: any) => baseR(d) + defaults.collisionPadding));
+      }
+      // Update link forces
+      const lf = sim.force('link') as d3.ForceLink<any, any> | undefined;
+      if (lf) {
+        lf.distance(defaults.linkDistance);
+        lf.strength(defaults.linkStrength);
+      }
+      if (sim.alpha() < 0.01) sim.alpha(0.15).restart();
+    }
+  }, [selectedCommunity]);
+
   // ---- Render ----
   const empty = !network || network.nodes.length === 0;
 
@@ -655,23 +602,11 @@ export function HierarchicalNetworkView({
       }
     >
       {/* Top bar: back button + force controls toggle */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
+      <div className="flex items-center gap-2 mb-2 flex-wrap">
         {selectedCommunity !== null && (
           <button
             onClick={() => setSelectedCommunity(null)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 4,
-              padding: '4px 10px',
-              fontSize: '0.7rem',
-              fontFamily: 'var(--font-sans)',
-              backgroundColor: 'transparent',
-              color: 'var(--color-accent)',
-              border: '1px solid var(--color-accent)',
-              borderRadius: 'var(--radius-sm)',
-              cursor: 'pointer',
-            }}
+            className="btn-ghost flex items-center gap-1 px-2.5 py-1 text-[0.7rem] font-sans text-accent border border-accent rounded-btn cursor-pointer"
           >
             <CaretLeft size={12} weight="bold" />
             返回社区总览
@@ -680,61 +615,30 @@ export function HierarchicalNetworkView({
         {!loading && !error && !empty && (
           <button
             onClick={() => setShowForceControls(v => !v)}
+            className="btn-ghost flex items-center gap-1 px-2.5 py-1 text-[0.7rem] font-sans text-ink-secondary border border-border rounded-btn cursor-pointer"
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 4,
-              padding: '4px 10px',
-              fontSize: '0.7rem',
-              fontFamily: 'var(--font-sans)',
               backgroundColor: showForceControls ? 'var(--color-canvas)' : 'transparent',
-              color: 'var(--color-ink-secondary)',
-              border: '1px solid var(--color-border)',
-              borderRadius: 'var(--radius-sm)',
-              cursor: 'pointer',
               marginLeft: selectedCommunity === null ? 0 : 'auto',
             }}
           >
             <GearSix size={12} weight={showForceControls ? 'fill' : 'regular'} />
             力参数
-            {showForceControls ? <CaretDown size={10} weight="bold" /> : <CaretRight size={10} weight="bold" />}
           </button>
         )}
       </div>
 
       {/* Force parameter controls (collapsible) */}
       {showForceControls && !loading && !error && !empty && (
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-          gap: '8px 12px',
-          padding: '10px 12px',
-          marginBottom: 8,
-          backgroundColor: 'var(--color-canvas)',
-          border: '1px solid var(--color-border)',
-          borderRadius: 'var(--radius-md)',
-        }}>
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-x-3 gap-y-2 p-2.5 mb-2 bg-canvas border border-border rounded-card">
           {(Object.keys(FORCE_LABELS) as (keyof ForceParams)[]).map(key => {
             const [min, max, step] = FORCE_RANGES[key];
             return (
-              <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'baseline',
-                }}>
-                  <label style={{
-                    fontSize: '0.6rem',
-                    fontFamily: 'var(--font-sans)',
-                    color: 'var(--color-ink-secondary)',
-                  }}>
+              <div key={key} className="flex flex-col gap-0.5">
+                <div className="flex justify-between items-baseline">
+                  <label className="text-[0.6rem] font-sans text-ink-secondary">
                     {FORCE_LABELS[key]}
                   </label>
-                  <span style={{
-                    fontSize: '0.55rem',
-                    fontFamily: "'Geist Mono', monospace",
-                    color: 'var(--color-ink-secondary)',
-                  }}>
+                  <span className="text-[0.55rem] font-mono text-ink-secondary">
                     {forceParams[key].toFixed(key === 'alphaDecay' ? 4 : key === 'linkStrength' || key === 'centerStrength' ? 2 : 0)}
                   </span>
                 </div>
@@ -745,61 +649,16 @@ export function HierarchicalNetworkView({
                   step={step}
                   value={forceParams[key]}
                   onChange={e => updateForceParam(key, parseFloat(e.target.value))}
-                  style={{
-                    width: '100%',
-                    height: 4,
-                    cursor: 'pointer',
-                    accentColor: 'var(--color-accent)',
-                  }}
+                  className="w-full h-1 cursor-pointer"
+                  style={{ accentColor: 'var(--color-accent)' }}
                 />
               </div>
             );
           })}
-          <div style={{
-            display: 'flex',
-            alignItems: 'flex-end',
-            justifyContent: 'flex-end',
-          }}>
+          <div className="flex items-end justify-end">
             <button
-              onClick={() => {
-                const defaults = selectedCommunity === null
-                  ? FORCE_DEFAULTS.community
-                  : FORCE_DEFAULTS.interior;
-                setForceParams(defaults);
-                // Reheat the sim with defaults
-                const sim = simRef.current;
-                if (sim) {
-                  const cx = sizeRef.current.w / 2;
-                  const cy = sizeRef.current.h / 2;
-                  sim.force('charge', d3.forceManyBody().strength(defaults.chargeStrength));
-                  sim.force('center', d3.forceCenter(cx, cy).strength(defaults.centerStrength));
-                  sim.alphaDecay(defaults.alphaDecay);
-                  // Update collision
-                  const nodes = nodeDataRef.current;
-                  if (nodes.length > 0) {
-                    const baseR = (d: any) => d.radius || 5;
-                    sim.force('collision', d3.forceCollide<any>().radius((d: any) => baseR(d) + defaults.collisionPadding));
-                  }
-                  // Update link forces
-                  const lf = sim.force('link') as d3.ForceLink<any, any> | undefined;
-                  if (lf) {
-                    lf.distance(defaults.linkDistance);
-                    lf.strength(defaults.linkStrength);
-                  }
-                  if (sim.alpha() < 0.01) sim.alpha(0.15).restart();
-                }
-              }}
-              style={{
-                padding: '3px 8px',
-                fontSize: '0.6rem',
-                fontFamily: 'var(--font-sans)',
-                backgroundColor: 'transparent',
-                color: 'var(--color-accent)',
-                border: '1px solid var(--color-accent)',
-                borderRadius: 'var(--radius-sm)',
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-              }}
+              onClick={handleResetForce}
+              className="btn-ghost px-2 py-[3px] text-[0.6rem] font-sans text-accent border border-accent rounded-btn cursor-pointer whitespace-nowrap"
             >
               重置默认
             </button>
@@ -809,57 +668,29 @@ export function HierarchicalNetworkView({
 
       <div
         ref={containerRef}
+        className="relative w-full bg-canvas rounded-card overflow-hidden transition-[height] duration-200"
         style={{
-          position: 'relative',
-          width: '100%',
           height: showForceControls ? 380 : 520,
-          backgroundColor: 'var(--color-canvas)',
-          borderRadius: 'var(--radius-md)',
-          overflow: 'hidden',
-          transition: 'height 200ms ease',
         }}
       >
         {loading ? (
-          <div style={{
-            height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <span style={{
-              fontFamily: "'Geist Mono', monospace",
-              color: COLORS.textSecondary,
-              fontSize: '0.8rem',
-            }}>
+          <div className="h-full flex items-center justify-center">
+            <span className="font-mono text-text-secondary text-[0.8rem]">
               加载网络中...
             </span>
           </div>
         ) : error ? (
-          <div style={{
-            height: '100%', display: 'flex', flexDirection: 'column',
-            alignItems: 'center', justifyContent: 'center', gap: 8,
-          }}>
-            <span style={{
-              fontFamily: "'Geist Sans', sans-serif",
-              color: 'var(--color-error-text)',
-              fontSize: '0.8rem',
-            }}>
+          <div className="h-full flex flex-col items-center justify-center gap-2">
+            <span className="font-sans text-[0.8rem]" style={{ color: 'var(--color-error-text)' }}>
               {error}
             </span>
-            <span style={{
-              fontFamily: "'Geist Sans', sans-serif",
-              color: COLORS.textSecondary,
-              fontSize: '0.65rem',
-            }}>
+            <span className="font-sans text-text-secondary text-[0.65rem]">
               请检查后端状态后重试
             </span>
           </div>
         ) : empty ? (
-          <div style={{
-            height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <span style={{
-              fontFamily: "'Geist Sans', sans-serif",
-              color: COLORS.textSecondary,
-              fontSize: '0.8rem',
-            }}>
+          <div className="h-full flex items-center justify-center">
+            <span className="font-sans text-text-secondary text-[0.8rem]">
               运行模拟以查看网络
             </span>
           </div>
@@ -871,7 +702,7 @@ export function HierarchicalNetworkView({
               height={size.h}
               viewBox={`0 0 ${size.w} ${size.h}`}
               onClick={handleSvgClick}
-              style={{ display: 'block', cursor: 'grab' }}
+              className="block cursor-grab"
             >
               <g className="zoom-layer" />
             </svg>
@@ -879,48 +710,23 @@ export function HierarchicalNetworkView({
             {/* Tooltip */}
             <div
               ref={tooltipRef}
-              style={{
-                position: 'absolute',
-                padding: '8px 12px',
-                background: 'rgba(0,0,0,0.85)',
-                color: '#fff',
-                borderRadius: '6px',
-                fontSize: '12px',
-                fontFamily: 'var(--font-sans)',
-                pointerEvents: 'none',
-                opacity: 0,
-                transition: 'opacity 0.15s',
-                maxWidth: 280,
-                lineHeight: 1.5,
-                zIndex: 100,
-              }}
+              className="absolute px-3 py-2 bg-black/85 text-white rounded-md text-xs font-sans pointer-events-none opacity-0 transition-opacity max-w-[280px] leading-relaxed z-[100]"
             />
 
             {/* Legend */}
-            <div style={{
-              position: 'absolute',
-              bottom: 42,
-              left: 10,
-              display: 'flex',
-              gap: 16,
-              fontSize: '0.6rem',
-              fontFamily: 'var(--font-sans)',
-              color: COLORS.textSecondary,
-              alignItems: 'center',
-              pointerEvents: 'none',
-            }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <span style={{
-                  display: 'inline-block', width: 8, height: 8, borderRadius: '50%',
-                  backgroundColor: COLORS.majority.text,
-                }} />
+            <div className="absolute bottom-[42px] left-2.5 flex gap-4 text-[0.6rem] font-sans text-text-secondary items-center pointer-events-none">
+              <span className="flex items-center gap-1">
+                <span
+                  className="inline-block w-2 h-2 rounded-full"
+                  style={{ backgroundColor: COLORS.majority.text }}
+                />
                 多数群体
               </span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <span style={{
-                  display: 'inline-block', width: 8, height: 8, borderRadius: '50%',
-                  backgroundColor: COLORS.minority.text,
-                }} />
+              <span className="flex items-center gap-1">
+                <span
+                  className="inline-block w-2 h-2 rounded-full"
+                  style={{ backgroundColor: COLORS.minority.text }}
+                />
                 少数群体
               </span>
               <span>
@@ -931,32 +737,18 @@ export function HierarchicalNetworkView({
             </div>
 
             {/* Zoom controls */}
-            <div style={{
-              position: 'absolute',
-              bottom: 8,
-              right: 8,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 2,
-              backgroundColor: 'rgba(255,255,255,0.94)',
-              border: '1px solid var(--color-border)',
-              borderRadius: 'var(--radius-sm)',
-              padding: '3px 4px',
-            }}>
-              <button onClick={handleZoomOut}
-                style={zoomBtnStyle}>
+            <div className="absolute bottom-2 right-2 flex items-center gap-0.5 bg-white/95 border border-border rounded-btn p-[3px_4px]">
+              <button onClick={handleZoomOut} className="btn-icon w-[22px] h-[22px]">
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                   <path d="M2 6h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                 </svg>
               </button>
-              <button onClick={handleZoomIn}
-                style={zoomBtnStyle}>
+              <button onClick={handleZoomIn} className="btn-icon w-[22px] h-[22px]">
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                   <path d="M6 2v8M2 6h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                 </svg>
               </button>
-              <button onClick={handleZoomReset}
-                style={{ ...zoomBtnStyle, fontSize: '0.6rem', fontFamily: 'var(--font-sans)', width: 'auto', padding: '0 6px', color: 'var(--color-accent)' }}>
+              <button onClick={handleZoomReset} className="btn-ghost text-[0.6rem] font-sans text-accent w-auto px-1.5 py-0.5">
                 重置
               </button>
             </div>
@@ -966,17 +758,3 @@ export function HierarchicalNetworkView({
     </Card>
   );
 }
-
-const zoomBtnStyle: React.CSSProperties = {
-  border: 'none',
-  background: 'none',
-  cursor: 'pointer',
-  padding: 2,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  width: 22,
-  height: 22,
-  borderRadius: 3,
-  color: 'var(--color-ink-secondary)',
-};

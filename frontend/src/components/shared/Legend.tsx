@@ -11,16 +11,15 @@ interface LegendProps {
 
 export function Legend({ items, className = '' }: LegendProps) {
   return (
-    <div className={`flex flex-wrap gap-4 ${className}`}
-      style={{ fontFamily: "'Geist Sans', sans-serif", fontSize: '0.7rem' }}>
+    <div className={`flex flex-wrap gap-4 font-sans text-[0.7rem] ${className}`}>
       {items.map((item, i) => (
         <div key={i} className="flex items-center gap-1.5">
           {item.shape === 'line' ? (
-            <span style={{ width: 16, height: 2, backgroundColor: item.color, display: 'inline-block' }} />
+            <span className="w-4 h-0.5" style={{ backgroundColor: item.color }} />
           ) : item.shape === 'rect' ? (
-            <span style={{ width: 10, height: 10, backgroundColor: item.color, display: 'inline-block', borderRadius: 2 }} />
+            <span className="w-2.5 h-2.5 rounded-[2px]" style={{ backgroundColor: item.color }} />
           ) : (
-            <span style={{ width: 8, height: 8, backgroundColor: item.color, borderRadius: '50%', display: 'inline-block' }} />
+            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
           )}
           <span className="text-text-secondary">{item.label}</span>
         </div>

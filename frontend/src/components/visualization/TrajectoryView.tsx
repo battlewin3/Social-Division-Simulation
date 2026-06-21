@@ -4,50 +4,17 @@ import { Card } from '../shared/Card';
 import { Legend } from '../shared/Legend';
 import { COLORS } from '../../lib/constants';
 import type { AgentData } from '../../types/simulation';
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-type FilterMode = 'all' | 'majority' | 'minority' | 'selected';
-
-interface TrajectoryViewProps {
-  agents: AgentData[];
-  selectedAgentId: number | null;
-  onSelectAgent: (id: number) => void;
-  loading: boolean;
-  error: string | null;
-}
-
-/** Z-score normalized agent for chart rendering. */
-interface NormalizedAgent {
-  agentId: number;
-  race: number;
-  zValues: [number, number, number, number]; // income, nhood, school, earnings
-}
-
-interface BrushState {
-  axisIndex: number;
-  y0: number;  // data coordinate
-  y1: number;  // data coordinate (y0 may be > y1)
-}
+import type { FilterMode, NormalizedAgent, BrushState, GroupMeans } from './TrajectoryCanvas/types';
+import { AXIS_LABELS, AXIS_KEYS, Y_MIN, Y_MAX, MAJORITY_HEX, MINORITY_HEX } from './TrajectoryCanvas/types';
+import { FilterBar } from './TrajectoryCanvas/FilterBar';
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
-const AXIS_LABELS = ['继承阶层', '社区质量', '学校质量', '劳动收入'] as const;
-const AXIS_KEYS = ['income', 'nhood_proper', 'school_proper', 'earnings'] as const;
-
-const Y_MIN = -3;
-const Y_MAX = 3;
-
-/** Clamp a value to [lo, hi] — replaces removed d3.clamp in D3 v7. */
+/** Clamp a value to [lo, hi] -- replaces removed d3.clamp in D3 v7. */
 const clamp = (v: number, lo: number, hi: number): number =>
   v < lo ? lo : v > hi ? hi : v;
-
-const MAJORITY_HEX = COLORS.majority.text;   // #1F6C9F
-const MINORITY_HEX = COLORS.minority.text;   // #956400
 
 const MAJORITY_RGB = { r: 0x1f, g: 0x6c, b: 0x9f };
 const MINORITY_RGB = { r: 0x95, g: 0x64, b: 0x00 };
@@ -113,11 +80,6 @@ function computeZScoredAgents(agents: AgentData[]): NormalizedAgent[] {
 // Group mean computation
 // ---------------------------------------------------------------------------
 
-interface GroupMeans {
-  majority: [number, number, number, number] | null;
-  minority: [number, number, number, number] | null;
-}
-
 function computeGroupMeans(normAgents: NormalizedAgent[]): GroupMeans {
   const majVals: number[][] = [[], [], [], []];
   const minVals: number[][] = [[], [], [], []];
@@ -170,36 +132,15 @@ function minorityRGBA(alpha: number): string {
 }
 
 // ---------------------------------------------------------------------------
-// Filter button component
+// Props
 // ---------------------------------------------------------------------------
 
-interface FilterButtonProps {
-  label: string;
-  active: boolean;
-  onClick: () => void;
-}
-
-function FilterButton({ label, active, onClick }: FilterButtonProps) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        fontFamily: "'Geist Sans', sans-serif",
-        fontSize: '0.7rem',
-        fontWeight: active ? 600 : 400,
-        padding: '4px 12px',
-        borderRadius: '6px',
-        border: `1px solid ${active ? COLORS.textPrimary : COLORS.border}`,
-        backgroundColor: active ? COLORS.textPrimary : COLORS.surface,
-        color: active ? COLORS.surface : COLORS.textSecondary,
-        cursor: 'pointer',
-        transition: 'all 150ms ease',
-        whiteSpace: 'nowrap',
-      }}
-    >
-      {label}
-    </button>
-  );
+interface TrajectoryViewProps {
+  agents: AgentData[];
+  selectedAgentId: number | null;
+  onSelectAgent: (id: number) => void;
+  loading: boolean;
+  error: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -736,7 +677,7 @@ export function TrajectoryView({
     (e: React.MouseEvent) => {
       // Only deselect if clicking on empty space (not on a brushed axis)
       if (brushRef.current?.active) return;
-      // Don't clear selection here — the user might want to keep it
+      // Don't clear selection here -- the user might want to keep it
     },
     [],
   );
@@ -780,75 +721,12 @@ export function TrajectoryView({
       <Legend items={legendItems} className="mb-3" />
 
       {/* Filter toggle buttons */}
-      <div
-        style={{
-          display: 'flex',
-          gap: 6,
-          marginBottom: 12,
-          flexWrap: 'wrap',
-        }}
-      >
-        <FilterButton
-          label="全部"
-          active={filterMode === 'all'}
-          onClick={() => setFilterMode('all')}
-        />
-        <FilterButton
-          label="仅多数"
-          active={filterMode === 'majority'}
-          onClick={() => setFilterMode('majority')}
-        />
-        <FilterButton
-          label="仅少数"
-          active={filterMode === 'minority'}
-          onClick={() => setFilterMode('minority')}
-        />
-        <FilterButton
-          label="仅选中"
-          active={filterMode === 'selected'}
-          onClick={() => setFilterMode('selected')}
-        />
-        {brush !== null && (
-          <span
-            style={{
-              fontFamily: "'Geist Sans', sans-serif",
-              fontSize: '0.65rem',
-              color: COLORS.textSecondary,
-              padding: '4px 8px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 4,
-            }}
-          >
-            <span
-              style={{
-                display: 'inline-block',
-                width: 6,
-                height: 6,
-                borderRadius: '50%',
-                backgroundColor: COLORS.textPrimary,
-                opacity: 0.4,
-              }}
-            />
-            刷选: {AXIS_LABELS[brush.axisIndex]} [{brush.y0.toFixed(1)}, {brush.y1.toFixed(1)}]
-            <button
-              onClick={() => setBrush(null)}
-              style={{
-                fontFamily: "'Geist Mono', monospace",
-                fontSize: '0.6rem',
-                border: 'none',
-                background: 'none',
-                color: COLORS.textSecondary,
-                cursor: 'pointer',
-                padding: 0,
-                marginLeft: 4,
-              }}
-            >
-              ✕
-            </button>
-          </span>
-        )}
-      </div>
+      <FilterBar
+        filterMode={filterMode}
+        onChange={setFilterMode}
+        brush={brush}
+        onClearBrush={() => setBrush(null)}
+      />
 
       {/* Loading skeleton */}
       {loading && (
@@ -860,19 +738,9 @@ export function TrajectoryView({
 
       {/* Error state */}
       {!loading && error && (
-        <div
-          style={{
-            height: 160,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 8,
-            fontFamily: 'var(--font-sans)',
-          }}
-        >
-          <span style={{ fontSize: '0.8rem', color: 'var(--color-error-text)' }}>{error}</span>
-          <span style={{ fontSize: '0.65rem', color: 'var(--color-ink-secondary)' }}>
+        <div className="flex flex-col items-center justify-center gap-2 font-sans" style={{ height: 160 }}>
+          <span className="text-[0.8rem]" style={{ color: 'var(--color-error-text)' }}>{error}</span>
+          <span className="text-[0.65rem] text-ink-secondary">
             请检查后端状态后重试
           </span>
         </div>
@@ -880,17 +748,7 @@ export function TrajectoryView({
 
       {/* Empty state */}
       {!loading && !error && isEmpty && (
-        <div
-          style={{
-            height: 160,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontFamily: "'Geist Sans', sans-serif",
-            fontSize: '0.8rem',
-            color: COLORS.textSecondary,
-          }}
-        >
+        <div className="flex items-center justify-center font-sans text-[0.8rem] text-text-secondary" style={{ height: 160 }}>
           运行仿真以查看个体生命轨迹
         </div>
       )}
@@ -899,31 +757,20 @@ export function TrajectoryView({
       {!loading && !error && !isEmpty && (
         <div
           ref={containerRef}
-          style={{
-            position: 'relative',
-            width: '100%',
-            height: CHART_HEIGHT,
-            overflow: 'hidden',
-          }}
+          className="relative w-full overflow-hidden"
+          style={{ height: CHART_HEIGHT }}
         >
           {/* Canvas layer: agent polylines */}
           <canvas
             ref={canvasRef}
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              pointerEvents: 'none',
-            }}
+            className="absolute top-0 left-0 pointer-events-none"
           />
 
           {/* SVG layer: axes, brush, selected line, group means, interaction */}
           <svg
             ref={svgRef}
+            className="absolute top-0 left-0"
             style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
               cursor: hoveredAgentId !== null ? 'pointer' : 'crosshair',
             }}
             onMouseMove={(e) => {
@@ -955,40 +802,14 @@ export function TrajectoryView({
 
           {/* Hover tooltip */}
           {hoveredAgentId !== null && (
-            <div
-              style={{
-                position: 'absolute',
-                top: 4,
-                right: 8,
-                fontFamily: "'Geist Mono', 'SF Mono', monospace",
-                fontSize: '0.65rem',
-                color: COLORS.textPrimary,
-                backgroundColor: COLORS.surface,
-                border: `1px solid ${COLORS.border}`,
-                borderRadius: 4,
-                padding: '2px 8px',
-                pointerEvents: 'none',
-              }}
-            >
+            <div className="absolute top-1 right-2 font-mono text-[0.65rem] text-text-primary bg-surface border border-border rounded px-2 py-0.5 pointer-events-none">
               Agent #{hoveredAgentId}
             </div>
           )}
 
           {/* Brushing instruction */}
           {brush === null && (
-            <div
-              style={{
-                position: 'absolute',
-                bottom: MARGIN.bottom + 4,
-                left: '50%',
-                transform: 'translateX(-50%)',
-                fontFamily: "'Geist Sans', sans-serif",
-                fontSize: '0.6rem',
-                color: COLORS.textSecondary,
-                pointerEvents: 'none',
-                opacity: 0.6,
-              }}
-            >
+            <div className="absolute bottom-[60px] left-1/2 -translate-x-1/2 font-sans text-[0.6rem] text-text-secondary pointer-events-none opacity-60">
               在坐标轴上拖拽以刷选范围  |  悬停轨迹查看个体  |  点击选中个体
             </div>
           )}

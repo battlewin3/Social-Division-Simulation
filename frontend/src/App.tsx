@@ -8,9 +8,11 @@ import { StatsView } from './components/visualization/StatsView';
 import { SensitivityView } from './components/visualization/SensitivityView';
 import { TrajectoryView } from './components/visualization/TrajectoryView';
 import { AgentInspector } from './components/visualization/AgentInspector';
+import { StatusBar } from './components/visualization/StatusBar';
+import { ErrorBanner } from './components/visualization/ErrorBanner';
 import { useSimulation } from './hooks/useSimulation';
 import type { SimulationParams } from './types/simulation';
-import { Warning, ArrowCounterClockwise, CaretDown, CaretRight } from '@phosphor-icons/react';
+import { CaretDown, CaretRight } from '@phosphor-icons/react';
 
 const DEFAULT_PARAMS: SimulationParams = {
   n_agents: 1000,
@@ -36,14 +38,6 @@ const DEFAULT_PARAMS: SimulationParams = {
   luck_sd: 1.0,
   rescale: true,
 };
-
-function isConnectionError(error: string): boolean {
-  return error.includes('未连接') || error.includes('重连');
-}
-
-function isTimeoutError(error: string): boolean {
-  return error.includes('超时');
-}
 
 export function App() {
   const {
@@ -174,134 +168,38 @@ export function App() {
 
       <MainLayout sidebar={sidebar}>
         {/* Status bar */}
-        <div
-          className="flex items-center gap-4 mb-4 text-xs flex-wrap"
-          style={{
-            fontFamily: "'Geist Mono', monospace",
-            fontSize: '0.65rem',
-            color: 'var(--color-ink-secondary)',
-          }}
-        >
-          <span>
-            状态:{' '}
-            {!connected
-              ? '未连接'
-              : loading
-                ? '模拟中...'
-                : hasRun
-                  ? '就绪'
-                  : '等待运行'}
-          </span>
-          {cachedMessage && (
-            <span style={{ color: 'var(--color-success-text)' }}>
-              {cachedMessage}
-            </span>
-          )}
-          {result && (
-            <>
-              <span>智能体: {result.meta.n_agents}</span>
-              <span>边: {result.meta.n_edges}</span>
-              <span>耗时: {result.meta.runtime_ms.toFixed(0)}ms</span>
-              <span style={{ color: 'var(--color-accent-text)' }}>
-                场景: {result.meta.scenario_label}
-              </span>
-            </>
-          )}
-        </div>
+        <StatusBar
+          connected={connected}
+          loading={loading}
+          hasRun={hasRun}
+          cachedMessage={cachedMessage}
+          result={result}
+        />
 
         {/* Error banner */}
-        {error && (
-          <div
-            className="mb-4 px-4 py-3 rounded-md flex items-center gap-3 text-sm"
-            style={{
-              backgroundColor: isConnectionError(error)
-                ? 'var(--color-warning-bg)'
-                : 'var(--color-error-bg)',
-              border: `1px solid ${
-                isConnectionError(error)
-                  ? 'var(--color-warning-text)'
-                  : 'var(--color-error-text)'
-              }`,
-              color: 'var(--color-ink)',
-            }}
-          >
-            <Warning
-              size={18}
-              weight="fill"
-              color={
-                isConnectionError(error)
-                  ? 'var(--color-warning-text)'
-                  : 'var(--color-error-text)'
-              }
-            />
-            <span style={{ flex: 1 }}>{error}</span>
-            {isConnectionError(error) ? (
-              <button
-                onClick={handleRetry}
-                className="px-3 py-1 text-xs font-medium rounded-md transition-colors"
-                style={{
-                  backgroundColor: 'var(--color-ink)',
-                  color: '#FFFFFF',
-                  border: 'none',
-                  cursor: 'pointer',
-                }}
-              >
-                重试
-              </button>
-            ) : isTimeoutError(error) ? (
-              <button
-                onClick={handleRetry}
-                className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md transition-colors"
-                style={{
-                  backgroundColor: 'var(--color-ink)',
-                  color: '#FFFFFF',
-                  border: 'none',
-                  cursor: 'pointer',
-                }}
-              >
-                <ArrowCounterClockwise size={12} weight="bold" />
-                重试
-              </button>
-            ) : null}
-          </div>
-        )}
+        {error && <ErrorBanner error={error} onRetry={handleRetry} />}
 
         {/* Progress bar */}
         {loading && (
           <div className="mb-4">
             <div className="flex items-center justify-between mb-1.5">
-              <span
-                className="text-xs"
-                style={{
-                  fontFamily: "'Geist Mono', monospace",
-                  fontSize: '0.625rem',
-                  color: 'var(--color-ink-secondary)',
-                }}
-              >
+              <span className="font-mono text-[0.625rem] text-ink-secondary">
                 {progress ? progress.phase : '正在初始化...'}
               </span>
-              <span
-                className="text-xs"
-                style={{
-                  fontFamily: "'Geist Mono', monospace",
-                  fontSize: '0.625rem',
-                  color: 'var(--color-ink-secondary)',
-                }}
-              >
+              <span className="font-mono text-[0.625rem] text-ink-secondary">
                 {progress ? `${Math.round(progress.pct)}%` : '...'}
               </span>
             </div>
             <div
-              className="w-full rounded-full overflow-hidden"
-              style={{ height: 3, backgroundColor: 'var(--color-border)' }}
+              className="w-full rounded-full overflow-hidden bg-border"
+              style={{ height: 3 }}
             >
               {progress ? (
                 <div
-                  className="h-full rounded-full"
+                  className="h-full rounded-full bg-accent transition-[width] duration-500"
                   style={{
                     width: `${progress.pct}%`,
-                    backgroundColor: 'var(--color-accent)',
-                    transition: 'width 500ms cubic-bezier(0.16, 1, 0.3, 1)',
+                    transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
                   }}
                 />
               ) : (
@@ -348,18 +246,13 @@ export function App() {
         <div className="mb-4">
           <button
             onClick={() => setShowTrajectory((v) => !v)}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', width: '100%',
-              backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)',
-              borderRadius: 'var(--radius-card)', cursor: 'pointer', fontFamily: 'var(--font-sans)',
-              fontSize: '0.75rem', color: 'var(--color-ink-secondary)', transition: 'background-color 150ms',
-            }}
+            className="flex items-center gap-1.5 px-3 py-2 w-full bg-surface border border-border rounded-card cursor-pointer font-sans text-xs text-ink-secondary transition-colors duration-150"
             onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--color-canvas)'; }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--color-surface)'; }}
           >
             {showTrajectory ? <CaretDown size={14} weight="bold" /> : <CaretRight size={14} weight="bold" />}
             敏感性分析与精确轨迹图
-            <span style={{ fontSize: '0.6rem', fontFamily: "'Geist Mono', monospace", color: 'var(--color-ink-secondary)', marginLeft: 'auto' }}>
+            <span className="font-mono text-[0.6rem] text-ink-secondary ml-auto">
               {result ? '参数扫描 · 平行坐标' : '暂无数据'}
             </span>
           </button>

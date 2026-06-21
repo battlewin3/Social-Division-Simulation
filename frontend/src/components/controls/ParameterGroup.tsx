@@ -15,18 +15,14 @@ export function ParameterGroup({ title, children, defaultOpen = true }: Paramete
     <div className="mb-4">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 w-full text-left py-1.5 mb-2 cursor-pointer bg-transparent border-none"
-        style={{ fontFamily: "'Geist Sans', sans-serif" }}
+        className="flex items-center gap-1.5 w-full text-left py-1.5 mb-2 cursor-pointer bg-transparent border-none font-sans"
       >
         {open ? (
           <CaretDown size={10} weight="bold" color="#787774" />
         ) : (
           <CaretRight size={10} weight="bold" color="#787774" />
         )}
-        <span
-          className="text-xs font-semibold uppercase tracking-wider text-text-secondary"
-          style={{ fontSize: '0.625rem', letterSpacing: '0.08em' }}
-        >
+        <span className="text-[0.625rem] tracking-[0.08em] font-semibold uppercase text-text-secondary">
           {title}
         </span>
       </button>
